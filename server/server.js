@@ -38,8 +38,8 @@ io.on("connection", (socket) => {
 
 app.use(express.static("client"));
 
-server.listen(3000, '0.0.0.0', () => {
-    console.log("Listening on *:3000");
+server.listen(8081, '0.0.0.0', () => {
+    console.log("Listening on *:8081");
 });
 
 app.get('/health', (req, res) => {
