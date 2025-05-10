@@ -1,0 +1,20 @@
+service: stealth
+
+image: trcmkr/stealth
+
+servers:
+  web:
+    - 103.249.132.94
+proxy:
+  ssl: true
+  host: stealth.trcmkr.ru
+  healthcheck:
+    path: /
+
+registry:
+  username: KAMAL_DOCKER_USERNAME
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+builder:
+  arch: amd64
