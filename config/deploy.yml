@@ -9,7 +9,7 @@ proxy:
   ssl: true
   host: stealth.trcmkr.ru
   healthcheck:
-    path: /
+    path: /health
 
 registry:
   username:
