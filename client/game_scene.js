@@ -104,7 +104,7 @@ export class GameScene extends Phaser.Scene {
         socket.on("playerDisconnected", (id) => {
             if (otherPlayers[id]) {
                 otherPlayers[id].destroy();
-                delete otherPlayers[id].nameText;
+                otherPlayers[id].nameText.destroy();
                 delete otherPlayers[id];
 
             }
