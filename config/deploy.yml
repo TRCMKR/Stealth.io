@@ -8,6 +8,7 @@ servers:
 proxy:
   ssl: true
   host: stealth.trcmkr.ru
+  app_port: 3000
   healthcheck:
     path: /health
 
