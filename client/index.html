@@ -1,25 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <title>Diep.io Clone</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="client.js"></script>
-</head>
-<style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        height: 100%;
-        width: 100%;
-        /*background: black;*/
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Меню игры</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            overflow: hidden;
+        }
 
-    canvas {
-        display: block;
-    }
-</style>
-<body></body>
+        .container {
+            position: absolute;
+            z-index: 1;
+            text-align: center;
+            color: white;
+        }
+
+        .title {
+            font-size: 36px;
+            margin-bottom: 50px;
+        }
+
+        .input-container {
+            margin-bottom: 20px;
+        }
+
+        .input-container input {
+            padding: 10px;
+            font-size: 18px;
+            width: 200px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .button {
+            padding: 15px;
+            font-size: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+
+        .button:active {
+            background-color: #3c8d42;
+        }
+
+        /* Размытие фона */
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('path_to_your_map_image.jpg'); /* Adjust path as needed */
+            background-size: cover;
+            filter: blur(10px);
+            z-index: 0;
+        }
+
+        .content {
+            z-index: 2;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+
+<div id="background" class="background"></div>
+
+<div id="menu" class="container">
+    <div class="title">Добро пожаловать в игру!</div>
+    <div class="content">
+        <div class="input-container">
+            <input type="text" id="playerName" placeholder="Введите имя игрока">
+        </div>
+        <button class="button" id="startGameBtn">Начать игру</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.85.0/dist/phaser.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js" type="module"></script>
+
+</body>
 </html>

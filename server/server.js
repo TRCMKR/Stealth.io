@@ -10,7 +10,14 @@ const players = {};
 
 io.on("connection", (socket) => {
     console.log("User connected: " + socket.id);
-    players[socket.id] = { x: 400, y: 300, rotation: 0 };
+    // players[socket.id] = { x: 400, y: 300, rotation: 0 };
+
+    socket.on("startGame", (playerName) => {
+        players[socket.id] = { x: 400, y: 300, rotation: 0, name: playerName };
+        console.log(`Player ${playerName} started `, players[socket.id].x, players[socket.id].y);
+        socket.emit('join', players[socket.id]);
+        socket.broadcast.emit("newPlayer", { id: socket.id, ...players[socket.id] });
+    });
 
     // Send all current players to the newly connected client
     socket.on("requestCurrentPlayers", () => {
