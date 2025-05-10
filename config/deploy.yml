@@ -12,7 +12,8 @@ proxy:
     path: /
 
 registry:
-  username: KAMAL_DOCKER_USERNAME
+  username:
+    - KAMAL_DOCKER_USERNAME
   password:
     - KAMAL_REGISTRY_PASSWORD
 
