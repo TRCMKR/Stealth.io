@@ -2,6 +2,8 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 
+const { version } = require('../package.json');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -10,6 +12,8 @@ const players = {};
 
 io.on("connection", (socket) => {
     console.log("User connected: " + socket.id);
+
+    socket.emit('version', version);
     // players[socket.id] = { x: 400, y: 300, rotation: 0 };
 
     socket.on("startGame", (playerName) => {

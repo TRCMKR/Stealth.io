@@ -19,6 +19,15 @@ const config = {
     },
     parent: 'game',
     scene: [MenuScene, GameScene],
+    plugins: {
+        scene: [
+            {
+                key: 'PhaserRaycaster',
+                plugin: PhaserRaycaster,
+                mapping: 'raycasterPlugin'
+            }
+        ]
+    },
     dom: {
         createContainer: true
     }

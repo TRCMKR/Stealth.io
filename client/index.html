@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Меню игры</title>
     <style>
         body {
@@ -61,14 +61,13 @@
             background-color: #3c8d42;
         }
 
-        /* Размытие фона */
         .background {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: url('path_to_your_map_image.jpg'); /* Adjust path as needed */
+            background-image: url('path_to_your_map_image.jpg');
             background-size: cover;
             filter: blur(10px);
             z-index: 0;
@@ -77,6 +76,16 @@
         .content {
             z-index: 2;
             position: relative;
+        }
+
+        footer {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            z-index: 3;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -94,7 +103,10 @@
     </div>
 </div>
 
+<footer id="version"></footer>
+
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.0/dist/phaser.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/phaser-raycaster@0.10.11/dist/phaser-raycaster.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="client.js" type="module"></script>
 

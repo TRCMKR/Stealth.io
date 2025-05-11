@@ -6,7 +6,19 @@ const worldHeight = 2000;
 
 export class GameScene extends Phaser.Scene {
     constructor() {
-        super({ key: 'GameScene' });
+        super({key: 'GameScene'});
+    }
+
+    init(data) {
+        this.playerName = data;
+    }
+
+    preload() {
+        this.load.image("tank", "https://labs.phaser.io/assets/sprites/tank.png");
+    }
+
+    create() {
+        socket.emit('startGame', this.playerName);
         socket.once('join', (data) => {
             this.player = this.physics.add.image(data.x, data.y, "tank");
 
@@ -17,102 +29,116 @@ export class GameScene extends Phaser.Scene {
                 strokeThickness: 3
             });
 
-            // Make the nameText follow the player
-            nameText.setOrigin(0.5, 0.5);  // Center text on the player
-
-            // Add it to the player object to keep track of it
+            nameText.setOrigin(0.5, 0.5);
             this.player.nameText = nameText;
 
-            console.log(this.player)
-        })
-    }
 
-    preload() {
-        this.load.image("tank", "https://labs.phaser.io/assets/sprites/tank.png");
-    }
+            this.raycaster = this.raycasterPlugin.createRaycaster();
 
-    create() {
-        this.player.setCollideWorldBounds(true);
+            this.raycaster.setBoundingBox(0, 0, worldWidth, worldHeight);
 
-        this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
-        this.cameras.main.setZoom(0.8);
-        this.cameras.main.startFollow(this.player);
-        this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
-        this.cursors = this.input.keyboard.createCursorKeys();
+            const ray = this.raycaster.createRay();
 
-        socket.emit("requestCurrentPlayers");
+            ray.autoSlice = true;
+            ray.enablePhysics();
+            ray.setConeDeg(30);
 
-        const minimap = this.cameras.add(0, 0, 500, 500).setName("minimap");
-        const viewportWidth = this.scale.gameSize.width;
-        const viewportHeight = this.scale.gameSize.height;
-        const minimapSize = Math.min(viewportWidth, viewportHeight) / 3.0;
-        minimap.setSize(minimapSize, minimapSize);
-        minimap.setZoom(minimapSize / worldHeight);
-        minimap.setPosition(0, viewportHeight - minimap.height);
-        minimap.setBackgroundColor(0xffffff);
-        minimap.scrollX = 0;
-        minimap.scrollY = 0;
-        minimap.centerOn(worldWidth / 2, worldHeight / 2);
+            const rayGraphics = this.add.graphics({fillStyle: {color: 0xFFFF00, alpha: 1}});
 
-        socket.on("currentPlayers", (players) => {
-            Object.keys(players).forEach((id) => {
+            this.player.ray = ray;
+            this.player.rayGraphics = rayGraphics;
+
+            this.raycaster.mapGameObjects(this.player, true)
+
+            this.player.setCollideWorldBounds(true);
+
+            socket.emit("requestCurrentPlayers");
+
+            this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+            this.cameras.main.setZoom(0.8);
+            this.cameras.main.startFollow(this.player);
+            this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
+            this.cursors = this.input.keyboard.createCursorKeys();
+
+            const minimap = this.cameras.add(0, 0, 500, 500).setName("minimap");
+            const viewportWidth = this.scale.gameSize.width;
+            const viewportHeight = this.scale.gameSize.height;
+            const minimapSize = Math.min(viewportWidth, viewportHeight) / 3.0;
+            minimap.setSize(minimapSize, minimapSize);
+            minimap.setZoom(minimapSize / worldHeight);
+            minimap.setPosition(0, viewportHeight - minimap.height);
+            minimap.setBackgroundColor(0xffffff);
+            minimap.centerOn(worldWidth / 2, worldHeight / 2);
+        });
+
+        socket.on("currentPlayers", players => {
+            Object.entries(players).forEach(([id, p]) => {
                 if (id === socket.id) {
-                    this.player.setPosition(players[id].x, players[id].y);
-                    this.player.rotation = players[id].rotation;
+                    this.player.setPosition(p.x, p.y);
+                    this.player.rotation = p.rotation;
                 } else {
-                    const newPlayer = this.add.image(players[id].x, players[id].y, "tank");
-                    newPlayer.rotation = players[id].rotation;
-
-                    const newNameText = this.add.text(players[id].x, players[id].y - 50, players[id].name, {
-                        fontSize: '16px',
-                        fill: '#fff',
-                        stroke: '#000',
-                        strokeThickness: 3
-                    });
-                    newNameText.setOrigin(0.5, 0.5);
-                    newPlayer.nameText = newNameText;
-
-                    otherPlayers[id] = newPlayer;
+                    this.addOtherPlayer(id, p.x, p.y, p.rotation, p.name);
                 }
             });
         });
 
-        socket.on("newPlayer", (playerInfo) => {
-            const newPlayer = this.add.image(playerInfo.x, playerInfo.y, "tank");
-            newPlayer.rotation = playerInfo.rotation;
-
-            const newNameText = this.add.text(playerInfo.x, playerInfo.y - 50, playerInfo.name, {
-                fontSize: '16px',
-                fill: '#fff',
-                stroke: '#000',
-                strokeThickness: 3
-            });
-            newNameText.setOrigin(0.5, 0.5);
-            newPlayer.nameText = newNameText;
-
-            otherPlayers[playerInfo.id] = newPlayer;
+        socket.on("newPlayer", info => {
+            this.addOtherPlayer(info.id, info.x, info.y, info.rotation, info.name);
         });
 
         socket.on("playerMoved", (data) => {
-            if (otherPlayers[data.id]) {
-                otherPlayers[data.id].setPosition(data.x, data.y);
-                otherPlayers[data.id].rotation = data.rotation;
-                otherPlayers[data.id].nameText.setPosition(otherPlayers[data.id].x, otherPlayers[data.id].y - 50);
+            const p = otherPlayers[data.id];
+            if (p) {
+                p.setPosition(data.x, data.y);
+                p.rotation = data.rotation;
+                p.nameText.setPosition(p.x, p.y - 50);
             }
         });
 
-        socket.on("playerDisconnected", (id) => {
-            if (otherPlayers[id]) {
-                otherPlayers[id].destroy();
-                otherPlayers[id].nameText.destroy();
-                delete otherPlayers[id];
+        socket.on("playerDisconnected", id => {
+            const o = otherPlayers[id];
+            if (o) {
+                // Remove from all tracking systems
+                this.raycaster.removeMappedObjects(o);
 
+                // Destroy components
+                o.nameText.destroy();
+                o.rayGraphics.destroy();
+                o.ray.destroy();
+                o.destroy();
+
+                delete otherPlayers[id];
             }
         });
     }
 
+    addOtherPlayer(id, x, y, rotation, name) {
+        const o = this.add.image(x, y, "tank").setRotation(rotation);
+        o.id = id;
+        o.nameText = this.add.text(x, y - 50, name, {
+            fontSize: '16px', fill: '#fff', stroke: '#000', strokeThickness: 3
+        }).setOrigin(0.5);
+
+        // Ray setup
+        const ray = this.raycaster.createRay();
+
+        ray.autoSlice = true;
+        ray.enablePhysics();
+        ray.setConeDeg(30);
+        o.ray = ray;
+
+        o.rayGraphics = this.add.graphics({ fillStyle: { color: 0xFFFF00, alpha: 1 } });
+        o.angle = rotation;
+
+        this.raycaster.mapGameObjects(o, true); // Update raycaster
+        otherPlayers[id] = o;
+    }
+
     update() {
+        if (!this.player) return;
+
         const speed = 200;
+
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-speed);
         } else if (this.cursors.right.isDown) {
@@ -135,6 +161,63 @@ export class GameScene extends Phaser.Scene {
             x: this.player.x,
             y: this.player.y,
             rotation: this.player.rotation
+        });
+
+        if (this.player.ray && this.player.rayGraphics) {
+            this.raycaster.removeMappedObjects(this.player);
+            this.player.ray.setOrigin(this.player.x, this.player.y);
+
+            const pointer = this.input.activePointer;
+            const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.worldX, pointer.worldY);
+
+            // Update ray direction
+            this.player.angle = angle;
+            this.player.ray.setAngle(angle);
+
+            const intersections = this.player.ray.castCone();
+
+            this.player.rayGraphics.clear();
+            this.player.rayGraphics.fillStyle(0xFFFF00, 1);
+
+            if (intersections.length > 0) {
+                const points = intersections.map(p => new Phaser.Math.Vector2(p.x, p.y));
+                points.unshift(new Phaser.Math.Vector2(this.player.x, this.player.y));
+
+                this.player.rayGraphics.beginPath();
+                this.player.rayGraphics.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    this.player.rayGraphics.lineTo(points[i].x, points[i].y);
+                }
+                this.player.rayGraphics.closePath();
+                this.player.rayGraphics.fillPath();
+            }
+            this.raycaster.mapGameObjects(this.player, true);
+        }
+
+        Object.values(otherPlayers).forEach((p) => {
+            this.raycaster.removeMappedObjects(p);
+
+            p.ray.setOrigin(p.x, p.y);
+            p.ray.setAngle(p.angle);
+
+            p.rayGraphics.clear();
+            p.rayGraphics.fillStyle(0xFFFF00, 1);
+
+            const intersections = p.ray.castCone();
+
+            if (intersections.length > 0) {
+                const points = intersections.map(pt => new Phaser.Math.Vector2(pt.x, pt.y));
+                points.unshift(new Phaser.Math.Vector2(p.x, p.y));
+
+                p.rayGraphics.beginPath();
+                p.rayGraphics.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    p.rayGraphics.lineTo(points[i].x, points[i].y);
+                }
+                p.rayGraphics.closePath();
+                p.rayGraphics.fillPath();
+            }
+            this.raycaster.mapGameObjects(p, true);
         });
     }
 }

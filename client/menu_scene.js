@@ -5,6 +5,14 @@ export class MenuScene extends Phaser.Scene {
         super({ key: 'MenuScene' });
     }
 
+    preload() {
+        const versionElement = document.getElementById('version');
+
+        socket.once('version', (version) => {
+            versionElement.textContent = `Версия: ${version}`;
+        })
+    }
+
     create() {
 
         // Create player name input field
@@ -29,7 +37,6 @@ export class MenuScene extends Phaser.Scene {
 
             // Start the game scene and pass player name
             this.scene.start('GameScene', playerName);
-            socket.emit("startGame", playerName);
         });
     }
 }
