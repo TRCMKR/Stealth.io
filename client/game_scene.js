@@ -102,7 +102,7 @@ export class GameScene extends Phaser.Scene {
             const p = otherPlayers[data.id];
             if (p) {
                 p.setPosition(data.x, data.y);
-                p.rotation = data.rotation;
+                p.angle = data.angle;
                 p.nameText.setPosition(p.x, p.y - 50);
             }
         });
@@ -124,8 +124,8 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    addOtherPlayer(id, x, y, rotation, name) {
-        const o = this.add.image(x, y, "tank").setRotation(rotation);
+    addOtherPlayer(id, x, y, angle, name) {
+        const o = this.add.image(x, y, "tank");
         o.id = id;
         o.nameText = this.add.text(x, y - 50, name, {
             fontSize: '16px', fill: '#fff', stroke: '#000', strokeThickness: 3
@@ -140,7 +140,7 @@ export class GameScene extends Phaser.Scene {
         o.ray = ray;
 
         o.rayGraphics = this.add.graphics({ fillStyle: { color: 0xFFFF00, alpha: 1 } });
-        o.angle = rotation;
+        o.angle = angle;
 
         this.raycaster.mapGameObjects(o, true); // Update raycaster
         otherPlayers[id] = o;
@@ -181,13 +181,13 @@ export class GameScene extends Phaser.Scene {
         );
 
         // Update ray direction
-        this.player.rotation = angle;
+        this.player.angle = angle;
         this.player.ray.setAngle(angle);
 
         socket.emit("playerMovement", {
             x: this.player.x,
             y: this.player.y,
-            rotation: this.player.rotation
+            angle: this.player.angle
         });
 
         this.raycaster.removeMappedObjects(this.player);

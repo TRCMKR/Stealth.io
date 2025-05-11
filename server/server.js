@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
         if (players[socket.id]) {
             players[socket.id].x = movementData.x;
             players[socket.id].y = movementData.y;
-            players[socket.id].rotation = movementData.rotation;
+            players[socket.id].angle = movementData.angle;
             socket.broadcast.emit("playerMoved", { id: socket.id, ...players[socket.id] });
         }
     });
