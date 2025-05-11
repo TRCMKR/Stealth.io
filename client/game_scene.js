@@ -56,9 +56,7 @@ export class GameScene extends Phaser.Scene {
 
         socket.on("currentPlayers", players => {
             Object.entries(players).forEach(([id, p]) => {
-                if (id === socket.id) {
-                    this.player.updatePosition(p.x, p.y, p.rotation);
-                } else {
+                if (id !== socket.id) {
                     this.addOtherPlayer(id, p.x, p.y, p.rotation, p.name, p.team);
                 }
             });
@@ -96,8 +94,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     addOtherPlayer(id, x, y, rotation, name, team) {
-        if (team === this.team) teammates[id] = new Player(this, id, x, y, rotation, this.raycaster, name, team);
-        else otherPlayers[id] = new Player(this, id, x, y, rotation, this.raycaster, name, team);
+        if (team === this.team) {
+            console.log(1)
+            teammates[id] = new Player(this, id, x, y, rotation, this.raycaster, name, team);
+        }
+        else {
+            otherPlayers[id] = new Player(this, id, x, y, rotation, this.raycaster, name, team);
+        }
     }
 
     update() {
@@ -110,17 +113,17 @@ export class GameScene extends Phaser.Scene {
 
         // let blocker;
         let players = Object.values(teammates).map(o => { this.children.sendToBack(o.player.rayGraphics); return o.player; })
-        this.raycaster.mapGameObjects(players, true);
         Object.values(otherPlayers).forEach((p) => {
+            p.raycaster.mapGameObjects(players, true);
             p.updateLighter();
+            p.raycaster.removeMappedObjects(players)
         });
-        this.raycaster.removeMappedObjects(players);
 
         players = Object.values(otherPlayers).map(o => { return o.player; })
-        this.raycaster.mapGameObjects(players, true);
         Object.values(teammates).forEach((p) => {
+            p.raycaster.mapGameObjects(players, true);
             p.updateLighter();
+            p.raycaster.removeMappedObjects(players)
         });
-        this.raycaster.removeMappedObjects(players)
     }
 }
