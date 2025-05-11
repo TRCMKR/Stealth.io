@@ -4,8 +4,8 @@ import {GameScene} from "./game_scene.js";
 export const socket = io();
 export let otherPlayers = {};
 
-const worldWidth = 2000;
-const worldHeight = 2000;
+export const worldWidth = 2000;
+export const worldHeight = 2000;
 
 const config = {
     type: Phaser.AUTO,
