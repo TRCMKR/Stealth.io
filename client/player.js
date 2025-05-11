@@ -16,16 +16,40 @@ export class Player {
             strokeThickness: 3
         });
 
+        this.rayRange = 300
+
+        // inside your Player constructor, replacing add.circle(...)
+        const radius   = this.rayRange;
+        const segments = 120;               // ↑ more segments = smoother circle
+        const verts    = [];
+
+// build [ x1, y1, x2, y2, x3, y3, ... ] around the circle
+        for (let i = 0; i < segments; i++) {
+            const theta = Phaser.Math.DegToRad((i / segments) * 360);
+            verts.push(
+                Math.cos(theta) * radius,
+                Math.sin(theta) * radius
+            );
+        }
+
+        this.blocker = scene.add.polygon(x, y, verts, 0x000000, 0);
+        this.blocker.setOrigin(0.5, 0.5);
+
+        scene.physics.add.existing(this.blocker, true);  // make it static
+        this.blocker.setPosition(this.player.x + this.rayRange, this.player.y + this.rayRange)
+
         nameText.setOrigin(0.5, 0.5);
         this.player.nameText = nameText;
 
-        this.raycaster = raycaster;
+        this.raycaster = scene.raycasterPlugin.createRaycaster();
+        scene.raycaster = this.raycaster;
+        this.raycaster.mapGameObjects(this.blocker, true);
 
         const ray = this.raycaster.createRay({ignoreNotIntersectedRays: false});
         ray.slice();
         ray.enablePhysics();
         ray.setConeDeg(85);
-        ray.setRayRange(300)
+        // ray.setRayRange(300)
         ray.round = true;
 
         const rayGraphics = this.scene.add.graphics({fillStyle: {color: this.player.color, alpha: 1}});
@@ -33,7 +57,8 @@ export class Player {
         this.player.ray = ray;
         this.player.rayGraphics = rayGraphics;
 
-        this.raycaster.mapGameObjects(this.player, true);
+        // this.raycaster.mapGameObjects(this.player, true);
+        // this.raycaster.mapGameObjects(this.blocker, true);
 
         this.player.setCollideWorldBounds(true);
 
@@ -45,6 +70,8 @@ export class Player {
         this.player.setPosition(x, y);
         this.player.rotation = rotation;
         this.player.nameText.setPosition(x, y - 50);
+
+        this.blocker.setPosition(this.player.x + this.rayRange, this.player.y + this.rayRange)
     }
 
     move(speed) {
@@ -61,6 +88,7 @@ export class Player {
         else if (down) this.player.setVelocityY(speed);
 
         this.player.nameText.setPosition(this.player.x, this.player.y - 50);
+        this.blocker.setPosition(this.player.x + this.rayRange, this.player.y + this.rayRange)
 
         const worldPoint = this.scene.input.activePointer.positionToCamera(this.scene.cameras.main);
         const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y);
@@ -76,7 +104,7 @@ export class Player {
     }
 
     updateLighter() {
-        this.scene.raycaster.removeMappedObjects(this.player);
+        // this.scene.raycaster.removeMappedObjects(this.player);
         this.player.ray.setOrigin(this.player.x, this.player.y);
         this.player.ray.setAngle(this.player.rotation);
 
@@ -96,11 +124,13 @@ export class Player {
             this.player.rayGraphics.fillPath();
         }
 
-        this.scene.raycaster.mapGameObjects(this.player, true);
+        // this.scene.raycaster.mapGameObjects(this.player, true);
     }
 
     destroy() {
-        this.raycaster.removeMappedObjects(this.player);
+        this.raycaster.removeMappedObjects(this.blocker);
+
+        this.blocker.destroy();
 
         this.player.nameText.destroy();
         this.player.rayGraphics.destroy();

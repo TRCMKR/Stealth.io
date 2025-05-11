@@ -1,5 +1,5 @@
 // const socket = io();
-import {otherPlayers, socket, worldWidth, worldHeight} from "./client.js";
+import {teammates, otherPlayers, socket, worldWidth, worldHeight} from "./client.js";
 import {Player} from "./player.js";
 
 export class GameScene extends Phaser.Scene {
@@ -16,15 +16,18 @@ export class GameScene extends Phaser.Scene {
     }
 
     create() {
-        this.raycaster = this.raycasterPlugin.createRaycaster();
-        this.raycaster.setBoundingBox(0, 0, worldWidth, worldHeight);
-
-        this.blockers = this.physics.add.staticGroup();
+        // this.raycaster = this.raycasterPlugin.createRaycaster();
+        // this.raycaster.setBoundingBox(0, 0, worldWidth, worldHeight);
 
         socket.emit('startGame', this.playerName);
 
         socket.once('join', (data) => {
+            this.team = data.team
+
             this.player = new Player(this, socket.id, data.x, data.y, 0, this.raycaster, data.name, data.team);
+            this.raycaster.setBoundingBox(0, 0, worldWidth, worldHeight);
+
+            teammates[socket.id] = this.player;
 
             socket.emit("requestCurrentPlayers");
 
@@ -70,6 +73,10 @@ export class GameScene extends Phaser.Scene {
             if (p) {
                 p.updatePosition(data.x, data.y, data.rotation);
             }
+            else {
+                const o = teammates[data.id];
+                if (o) o.updatePosition(data.x, data.y, data.rotation);
+            }
         });
 
         socket.on("playerDisconnected", id => {
@@ -78,11 +85,19 @@ export class GameScene extends Phaser.Scene {
                 o.destroy();
                 delete otherPlayers[id]
             }
+            else {
+                const p = teammates[id];
+                if (p) {
+                    p.destroy();
+                    delete teammates[id];
+                }
+            }
         });
     }
 
     addOtherPlayer(id, x, y, rotation, name, team) {
-        otherPlayers[id] = new Player(this, id, x, y, rotation, this.raycaster, name, team);
+        if (team === this.team) teammates[id] = new Player(this, id, x, y, rotation, this.raycaster, name, team);
+        else otherPlayers[id] = new Player(this, id, x, y, rotation, this.raycaster, name, team);
     }
 
     update() {
@@ -91,10 +106,21 @@ export class GameScene extends Phaser.Scene {
         const speed = 200;
 
         this.player.move(speed);
-        this.player.updateLighter()
+        // this.player.updateLighter()
 
+        // let blocker;
+        let players = Object.values(teammates).map(o => { this.children.sendToBack(o.player.rayGraphics); return o.player; })
+        this.raycaster.mapGameObjects(players, true);
         Object.values(otherPlayers).forEach((p) => {
             p.updateLighter();
         });
+        this.raycaster.removeMappedObjects(players);
+
+        players = Object.values(otherPlayers).map(o => { return o.player; })
+        this.raycaster.mapGameObjects(players, true);
+        Object.values(teammates).forEach((p) => {
+            p.updateLighter();
+        });
+        this.raycaster.removeMappedObjects(players)
     }
 }

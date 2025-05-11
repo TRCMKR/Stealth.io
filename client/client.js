@@ -2,6 +2,7 @@ import {MenuScene} from "./menu_scene.js";
 import {GameScene} from "./game_scene.js";
 
 export const socket = io();
+export let teammates = {};
 export let otherPlayers = {};
 
 export const worldWidth = 2000;
