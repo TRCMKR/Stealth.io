@@ -38,7 +38,7 @@ export class Player {
         this.player.setCollideWorldBounds(true);
 
         // after you’ve added both the tank and the rayGraphics:
-        // this.scene.children.sendToBack(this.player.rayGraphics);
+        this.scene.children.sendToBack(this.player.rayGraphics);
     }
 
     updatePosition(x, y, rotation) {
